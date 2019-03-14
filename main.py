@@ -10,10 +10,13 @@ import Queue
 import threading
 import ctypes
 import inspect
+import logging
+import logging.config
+
 
 scan_tasks=Queue.Queue()
 terminate_mark=False
-
+logging.config.dictConfig(config['log'])
 
 def _async_raise(tid, exctype):
     """raises the exception, performs cleanup if needed"""
@@ -62,6 +65,7 @@ def task_service():
                         'sended':l.sended,
                         'dealed':l.dealed
                     }
+                    logging.info("%s,%s"%(request['method'],request['url']))
                     scan_tasks.put(scan.delay(request))
                     l.sended=True
             else:
@@ -81,7 +85,7 @@ def task_service():
                 l.sended=True
             session.commit()
         except Exception,e:
-            print e.message
+            logging.error(e.message)
 
 def result_service():
     session=DBSession()
@@ -92,7 +96,7 @@ def result_service():
             job=scan_tasks.get()
             if job.ready():
                 result=job.get()
-                print result
+                logging.debug(result['ans'])
                 if(not result['ans']['exists']):
                     res=Result()
                     res.fingerprint=gen_fingerprint(result['request'])
@@ -106,7 +110,7 @@ def result_service():
                 scan_tasks.put(job)
             session.commit()
         except Exception,e:
-            print e.message
+            logging.error(e.message)
 
 
 if __name__=='__main__':
@@ -114,6 +118,7 @@ if __name__=='__main__':
     result_thread=threading.Thread(target=result_service)
     proxy_thread=threading.Thread(target=proxy_service)
     task_thread.start()
+
     result_thread.start()
     proxy_thread.start()
     threads=[task_thread,result_thread,proxy_thread]
@@ -121,11 +126,11 @@ if __name__=='__main__':
         while True:
             for thread in threads:
                 if not thread.isAlive():
-                    print "[-]thread %s terminated,trying to recall it"%(thread.getName())
-                    thread.start()
-                    print "[+]recall thread %s succeed"%(thread.getName())
+                    logging.error("thread %s terminated,trying to recall it"%(thread.getName()))
+                    thread
+                    logging.info("recall thread %s succeed"%(thread.getName()))
     except KeyboardInterrupt,e:
-        print '[-]user termiated'
+        logging.error('user termiated')
         for thread in threads:
             stop_thread(thread)
 
