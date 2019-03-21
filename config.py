@@ -8,6 +8,18 @@ config={
         'db':1
     },
     'tasks':10,
+    'pocs':['xss'],
+    'poc_path':'/Users/image/PycharmProjects/PScan/lib/pocs/',
+    'poc_config':{
+      'xss':{
+        'xss_str':'<script>alert(1)</script>'
+      }
+    },
+    'enable_sqlmap':False,
+    'sqlmap_api':'http://127.0.0.1:8775',
+    'sqlmap':{
+      'ban':[]
+    },
     'log':{
       "version": 1,
       "disable_existing_loggers": False,

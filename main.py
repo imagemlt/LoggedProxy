@@ -2,21 +2,20 @@
 from proxy import LoggedProxy
 from proxy.models import *
 from config import config
-from scanner.task import scan
+from scanner.task import scan, sqlmap_scan
 from scanner.fingerprint import gen_fingerprint
+from lib.Log import *
+from scanner.sqlmap import *
 from collections import Iterable
 import json
 import Queue
 import threading
 import ctypes
 import inspect
-import logging
-import logging.config
 
 
-scan_tasks=Queue.Queue()
+scan_tasks=Queue.Queue(config['tasks'])
 terminate_mark=False
-logging.config.dictConfig(config['log'])
 
 def _async_raise(tid, exctype):
     """raises the exception, performs cleanup if needed"""
@@ -48,8 +47,6 @@ def task_service():
             break
         try:
             task_count=scan_tasks.qsize()
-            if(task_count>=config['tasks']):
-                continue
             session=DBSession()
             Logs=session.query(Log).filter(Log.sended==False).limit(config['tasks']-task_count).all()
             if isinstance(Logs,Iterable):
@@ -59,30 +56,18 @@ def task_service():
                         'method':l.method,
                         'url':l.url,
                         'requestline':l.requestline,
-                        'headers':l.headers,
+                        'headers':json.loads(l.headers),
                         'req_body':l.req_body,
                         'time':l.time,
                         'sended':l.sended,
                         'dealed':l.dealed
                     }
                     logging.info("%s,%s"%(request['method'],request['url']))
-                    scan_tasks.put(scan.delay(request))
+                    for poc in config['pocs']:
+                        scan_tasks.put(scan.delay(request,poc))
+                    if(config['enable_sqlmap']):
+                        scan_tasks.put(sqlmap_scan.deplay(request))
                     l.sended=True
-            else:
-                l=Logs
-                request=request={
-                        'id':l.id,
-                        'method':l.method,
-                        'url':l.url,
-                        'requestline':l.requestline,
-                        'headers':l.headers,
-                        'req_body':l.req_body,
-                        'time':l.time,
-                        'sended':l.sended,
-                        'dealed':l.dealed
-                    }
-                scan_tasks.put(scan.delay(request))
-                l.sended=True
             session.commit()
         except Exception,e:
             logging.error(e.message)
@@ -96,10 +81,10 @@ def result_service():
             job=scan_tasks.get()
             if job.ready():
                 result=job.get()
-                logging.debug(result['ans'])
-                if(not result['ans']['exists']):
+                logging.debug(result)
+                if(not result['exists'] and result['found']>0):
                     res=Result()
-                    res.fingerprint=gen_fingerprint(result['request'])
+                    res.fingerprint=gen_fingerprint(result['request'],result['type'])
                     res.type=result['type']
                     res.requestId=result['request']['id']
                     res.result=json.dumps(result['result'])
@@ -127,7 +112,6 @@ if __name__=='__main__':
             for thread in threads:
                 if not thread.isAlive():
                     logging.error("thread %s terminated,trying to recall it"%(thread.getName()))
-                    thread
                     logging.info("recall thread %s succeed"%(thread.getName()))
     except KeyboardInterrupt,e:
         logging.error('user termiated')

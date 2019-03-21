@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import random
 
-def gen_fingerprint(request):
+def gen_fingerprint(request,poc):
     '''
 
     :param request:
@@ -9,3 +9,4 @@ def gen_fingerprint(request):
     '''
     # TODO:fingerprint_algo
     return random.random()
+

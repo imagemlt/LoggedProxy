@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from sqlalchemy import Column, String, Text, DateTime, Integer, Boolean, ForeignKey, create_engine
+from sqlalchemy import Column, String, Text, DateTime, Integer, Boolean, BLOB, ForeignKey, create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 import datetime
@@ -17,7 +17,7 @@ class Log(Base):
     url=Column(String(1024))
     requestline=Column(String(1024))
     headers=Column(String(1024))
-    req_body=Column(Text,nullable=True)
+    req_body=Column(BLOB,nullable=True)
     time=Column(DateTime,default=datetime.datetime.utcnow())
     sended=Column(Boolean,default=False)
     dealed=Column(Boolean,default=False)
@@ -33,6 +33,12 @@ class Result(Base):
     result=Column(Text)
 
 
+class Rule(Base):
+    __tablename__='Rule'
+
+    id=Column(Integer,primary_key=True,autoincrement=True)
+    type=Column(String(10))
+    rule=Column(Text)
 
 
 engine=create_engine('sqlite:////tmp/log.db')
@@ -40,4 +46,5 @@ engine=create_engine('sqlite:////tmp/log.db')
 Base.metadata.create_all(engine)
 
 DBSession =sessionmaker(bind=engine)
+
 
