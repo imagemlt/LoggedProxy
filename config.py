@@ -15,7 +15,7 @@ config={
         'xss_str':'<script>alert(1)</script>'
       }
     },
-    'enable_sqlmap':False,
+    'enable_sqlmap':True,
     'sqlmap_api':'http://127.0.0.1:8775',
     'sqlmap':{
       'ban':[]

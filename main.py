@@ -66,7 +66,7 @@ def task_service():
                     for poc in config['pocs']:
                         scan_tasks.put(scan.delay(request,poc))
                     if(config['enable_sqlmap']):
-                        scan_tasks.put(sqlmap_scan.deplay(request))
+                        scan_tasks.put(sqlmap_scan.delay(request))
                     l.sended=True
             session.commit()
         except Exception,e:

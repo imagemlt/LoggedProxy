@@ -64,16 +64,14 @@ def sqlmap_scan(request):
     taskid=json.loads(requests.get('%s/task/new'%(sqlmap_api)).content)['taskid']
     data=json.dumps(sqlmap_conf)
     try:
-        requests.post("%s/options/%s/set"%(sqlmap_api,taskid),data=json.dumps(sqlmap_conf),headers=json_headers)
-        requests.post("%s/scan/%s/start"%(sqlmap_api,taskid),data="{}",headers=json_headers)
+        requests.post("%s/scan/%s/start"%(sqlmap_api,taskid),data=json.dumps(sqlmap_conf),headers=json_headers)
 
         while(json.loads(requests.get("%s/scan/%s/status"%(sqlmap_api,taskid)).content)['status']!='terminated'):
             time.sleep(5)
-        data=json.loads(requests.get("%s/scan/%s/data"%(sqlmap_api,taskid).content)['data'])
+        data=json.loads(requests.get("%s/scan/%s/data"%(sqlmap_api,taskid)).content)['data']
         if data!=[]:
             message['found']=3
-            message['result'] += "title: %s|#|payload: %s|#|taskid: %s|,|" % (
-            data[0]['value'][0]['data']['1']['title'], data[0]['value'][0]['data']['1']['payload'], taskid)
+            message['result'] += json.dumps(data)
     except Exception,e:
         logging.error(e.message)
     finally:
