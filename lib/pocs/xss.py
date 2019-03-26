@@ -1,5 +1,4 @@
 from lib.utils import *
-#from lib.Log import *
 import requests
 import copy
 from urllib import urlencode
